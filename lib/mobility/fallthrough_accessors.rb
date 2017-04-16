@@ -33,24 +33,14 @@ model class is generated.
   #=> "title in fr"
 
 =end
-  class FallthroughAccessors < Module
+  class FallthroughAccessors < MethodFound::Interceptor
     # @param [String] One or more attributes
     def initialize(*attributes)
-      method_name_regex = /\A(#{attributes.join('|'.freeze)})_([a-z]{2}(_[a-z]{2})?)(=?|\??)\z/.freeze
-
-      define_method :method_missing do |method_name, *arguments, &block|
-        if method_name =~ method_name_regex
-          attribute = $1.to_sym
-          locale, suffix = $2.split('_'.freeze)
-          locale = "#{locale}-#{suffix.upcase}".freeze if suffix
-          Mobility.with_locale(locale) { public_send("#{attribute}#{$4}".freeze, *arguments) }
-        else
-          super(method_name, *arguments, &block)
-        end
-      end
-
-      define_method :respond_to_missing? do |method_name, include_private = false|
-        (method_name =~ method_name_regex) || super(method_name, include_private)
+      super /\A(#{attributes.join('|'.freeze)})_([a-z]{2}(_[a-z]{2})?)(=?|\??)\z/.freeze do |_method_name, matches, *arguments|
+        attribute = matches[1].to_sym
+        locale, suffix = matches[2].split('_'.freeze)
+        locale = "#{locale}-#{suffix.upcase}".freeze if suffix
+        Mobility.with_locale(locale) { public_send("#{attribute}#{matches[4]}".freeze, *arguments) }
       end
     end
   end

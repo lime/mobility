@@ -1,5 +1,6 @@
 require 'i18n'
 require 'request_store'
+require 'method_found'
 require 'mobility/version'
 
 %w[object string].each do |type|
